@@ -1,0 +1,67 @@
+#auth yml
+services:
+  # -------------------------------------------------
+  #  1) Datenbank
+  # -------------------------------------------------
+  auth-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_users
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    ports: ["5435:5432"]
+
+  # -------------------------------------------------
+  #  2) Einmal-user_migrator
+  # -------------------------------------------------
+  auth_migrator:
+    image: postgres:16
+    depends_on: [ auth-db ]
+    volumes:
+      - ./migrations:/migrations:ro
+    environment:
+      # dasselbe Passwort, das du in db: POSTGRES_PASSWORD gesetzt hast
+      PGPASSWORD: postgres
+    entrypoint: >
+      sh -c '
+        until pg_isready -h auth-db -U postgres -d auth_users; do
+          echo "⌛ waiting for auth-db …"; sleep 1;
+        done &&
+        for f in /migrations/*.sql; do
+          echo "🚀 running $${f}";
+          psql -h auth-db -U postgres -d auth_users -v ON_ERROR_STOP=1 -f "$${f}";
+        done
+      '
+    restart: "no"          # einmal laufen, dann stoppen
+
+
+  # -------------------------------------------------
+  #  3) User-Service
+  # -------------------------------------------------
+
+  # -------------------------------------------------
+  #  4) Auth-Service
+  # -------------------------------------------------
+  auth-service:
+    build: auth-service
+    env_file: auth-service/.env
+    depends_on: [ auth-db, auth_migrator]
+    ports: ["5050:5000"]
+    networks:
+      - finders-network
+
+  mailpit:
+    image: axllent/mailpit
+    ports: [ "8025:8025", "1025:1025" ]
+
+volumes:
+  auth_db_data:
+
+networks:
+  default:
+    name: finders-network
+    external: true
+
