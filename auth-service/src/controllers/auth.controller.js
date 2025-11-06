@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import { generateToken, sendResetMail } from '../utils/password-reset.js';
 import crypto from 'crypto';
 
-require('dotenv').config();
+import 'dotenv/config';
 const jwtSecret = process.env.JWT_SECRET;
 
 function handleValidation(req, res) {
