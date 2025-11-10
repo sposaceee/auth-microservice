@@ -7,6 +7,8 @@ import { verifyAdmin } from '../middleware/verifyAdmin.js';
 
 const router = Router();
 
+router.get('/health', ctrl.checkHealth);
+
 router.post(
     '/register',
     body('name').isLength({ min: 2 }),

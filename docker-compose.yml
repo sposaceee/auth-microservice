@@ -52,7 +52,7 @@ services:
     depends_on: [ auth-db, auth_migrator]
     ports: ["5050:5000"]
     networks:
-      - finders-network
+      - service-network
 
   mailpit:
     image: axllent/mailpit
@@ -62,5 +62,5 @@ volumes:
   auth_db_data:
 
 networks:
-  finders-network:
+  service-network:
     external: true
