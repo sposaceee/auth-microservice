@@ -13,7 +13,8 @@ services:
     volumes:
       - auth_db_data:/var/lib/postgresql/data
     ports: ["5435:5432"]
-
+    networks:
+      - finders-network
 
   # -------------------------------------------------
   #  2) Einmal-user_migrator
@@ -37,6 +38,8 @@ services:
         done
       '
     restart: "no"          # einmal laufen, dann stoppen
+    networks:
+      - finders-network
 
 
   # -------------------------------------------------
@@ -47,12 +50,12 @@ services:
   #  4) Auth-Service
   # -------------------------------------------------
   auth-service:
-    build: auth-service
-    env_file: auth-service/.env
+    build: ./auth-service
+    env_file: ./auth-service/.env
     depends_on: [ auth-db, auth_migrator]
     ports: ["5050:5000"]
     networks:
-      - service-network
+      - finders-network
 
   mailpit:
     image: axllent/mailpit
@@ -62,5 +65,5 @@ volumes:
   auth_db_data:
 
 networks:
-  service-network:
+  finders-network:
     external: true
